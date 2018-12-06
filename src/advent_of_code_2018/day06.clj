@@ -6,7 +6,7 @@
 (defn parse-input [s]
   (map #(read-string (str \[ % \])) (str/split-lines s)))
 
-(defn distance [[x1 y1] [x2 y2]]
+(defn distance [[^long x1 ^long y1] [^long x2 ^long y2]]
   (+ (Math/abs (- x1 x2)) (Math/abs (- y1 y2))))
 
 (defn boundaries [points]
@@ -49,7 +49,7 @@
     (apply max (map #(get counts %) finite))))
 
 (defn region-size [points max-distance]
-  (let [[[min-x min-y] [max-x max-y] :as boundaries] (boundaries points)
+  (let [[[min-x min-y] [max-x max-y]] (boundaries points)
         region-points (for [y (range min-y (inc max-y))
                             x (range min-x (inc max-x))
                             :let [d (reduce #(+ %1 (distance [x y] %2)) 0 points)]
@@ -62,6 +62,5 @@
     ;; First star
     #_(largest-area input)
     ;; Second star
-    (region-size input 10000)
-    )
+    (region-size input 10000))
   )
