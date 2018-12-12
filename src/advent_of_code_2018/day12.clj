@@ -35,23 +35,24 @@
 (defn generation-sequence [input rules]
   (iterate (next-generation rules) (plants-map input 0)))
 
-(defn stable-growth [input rules]
-  (let [check-n-sums 4]
+(defn stable-growth [input rules check-n-sums]
+  (let [fixed-add (fn [previous x]
+                    (if (= (count previous) check-n-sums)
+                      (conj (vec (drop 1 previous)) x)
+                      (conj previous x)))]
     (reduce (fn [{:keys [previous] :as acc} gen]
-              (let [diff (when (= check-n-sums (count previous))
+              (let [s (sum gen)
+                    previous (fixed-add previous s)
+                    diff (when (= check-n-sums (count previous))
                            (map (fn [[a b]] (- b a)) (partition 2 1 previous)))]
                 (if (and diff (apply = diff))
-                  (reduced (-> acc
-                               (update :generation-n dec)
-                               (assoc :growth (first diff))))
-                  (let [s (sum gen)]
-                    (-> acc
-                        (update :generation-n inc)
-                        (assoc  :generation-sum s)
-                        (update :previous (fn [previous x]
-                                            (if (= (count previous) check-n-sums)
-                                              (conj (vec (drop 1 previous)) x)
-                                              (conj previous x))) s))))))
+                  (reduced
+                   (assoc acc
+                          :growth (first diff)
+                          :generation-sum s))
+                  (-> acc
+                      (update :generation-n inc)
+                      (assoc :previous previous)))))
             {:generation-n 0
              :previous []} (generation-sequence input rules))))
 
@@ -66,10 +67,6 @@
     ;; Second star
     (let [goal-generation 50000000000
           {:keys [generation-n growth
-                  generation-sum]} (stable-growth input rules)]
-      (+ generation-sum (* (- goal-generation generation-n) growth)))
-    )
-;;=> 1050000000480
-
-
+                  generation-sum]} (stable-growth input rules 4)]
+      (+ generation-sum (* (- goal-generation generation-n) growth))))
   )
